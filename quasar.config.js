@@ -58,7 +58,7 @@ export default defineConfig((/* ctx */) => {
 
       vitePlugins: [
         [
-          'vite-plugin-checker',
+        
           {
             eslint: {
               warnings: true,
