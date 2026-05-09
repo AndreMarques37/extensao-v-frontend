@@ -1,0 +1,5 @@
+{
+  "buildCommand": "quasar build",
+  "outputDirectory": "dist/spa",
+  "installCommand": "npm install"
+}
