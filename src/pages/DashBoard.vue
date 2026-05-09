@@ -205,7 +205,7 @@ const faturamentoMensalFormatado = computed(() => {
   const total = todosAgendamentos.value
     .filter(item => {
       if (!item.data || item.status === 'cancelado') return false
-      const [d, m, a] = item.data.replace(/-/g, '/').split('/')
+      const [ m, a] = item.data.replace(/-/g, '/').split('/')
       return Number(m) === mSel && Number(a) === aSel
     })
     .reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0)
@@ -218,7 +218,7 @@ const salvarNoBanco = async (item) => {
     $q.loading.show()
     await api.put(`/agendamentos/${item.id}`, item)
     return true
-  } catch (e) {
+  } catch {
     $q.notify({ type: 'negative', message: 'Erro ao salvar. Verifique o servidor.' })
     return false
   } finally { $q.loading.hide() }
