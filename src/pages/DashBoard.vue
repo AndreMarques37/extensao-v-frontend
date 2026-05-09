@@ -1,6 +1,5 @@
 <template>
   <q-page class="q-pa-md bg-grey-2">
-    
     <div class="row q-col-gutter-md q-mb-lg">
       <div class="col-12 col-sm-6">
         <q-card class="resumo-card card-diario text-white shadow-2">
@@ -10,7 +9,7 @@
               <div class="text-h4 text-weight-bolder q-my-xs">{{ faturamentoDiarioFormatado }}</div>
               <div class="text-caption row items-center">
                 <q-icon name="pending_actions" class="q-mr-xs" />
-                {{ agendamentosDia.filter(i => !i.status).length }} atendimentos ativos
+                {{ agendamentosDia.filter((i) => !i.status).length }} atendimentos ativos
               </div>
             </div>
             <q-icon name="payments" size="52px" class="icon-fundo" />
@@ -22,7 +21,9 @@
         <q-card class="resumo-card card-mensal text-white shadow-2">
           <q-card-section class="row items-center no-wrap">
             <div class="col">
-              <div class="text-overline text-weight-medium opacity-70">Total de {{ nomeMesVisualizado }}</div>
+              <div class="text-overline text-weight-medium opacity-70">
+                Total de {{ nomeMesVisualizado }}
+              </div>
               <div class="text-h4 text-weight-bolder q-my-xs">{{ faturamentoMensalFormatado }}</div>
               <div class="text-caption row items-center">
                 <q-icon name="auto_graph" class="q-mr-xs" />
@@ -44,8 +45,10 @@
         </div>
         <q-date
           v-model="dataSelecionada"
-          minimal flat class="full-width"
-          mask="DD/MM/YYYY" 
+          minimal
+          flat
+          class="full-width"
+          mask="DD/MM/YYYY"
           :events="datasComAgendamento"
           event-color="warning"
           @update:model-value="filtrarPorData"
@@ -60,26 +63,44 @@
         <q-item-section>Nenhum agendamento para este dia.</q-item-section>
       </q-item>
 
-      <q-item 
-        v-for="item in agendamentosDia" 
-        :key="item.id" v-ripple clickable 
+      <q-item
+        v-for="item in agendamentosDia"
+        :key="item.id"
+        v-ripple
+        clickable
         @click="verDetalhes(item)"
-        :class="{ 
+        :class="{
           'bg-cancelado': item.status === 'cancelado',
-          'bg-concluido': item.status === 'concluido' 
+          'bg-concluido': item.status === 'concluido',
         }"
       >
         <q-item-section side>
-          <div :class="{ 'text-strike text-grey': item.status === 'cancelado' }" class="text-weight-bold text-primary">
+          <div
+            :class="{ 'text-strike text-grey': item.status === 'cancelado' }"
+            class="text-weight-bold text-primary"
+          >
             {{ item.hora }}
           </div>
         </q-item-section>
 
         <q-item-section>
-          <q-item-label :class="{ 'text-strike text-grey': item.status === 'cancelado' }" class="text-weight-bold">
+          <q-item-label
+            :class="{ 'text-strike text-grey': item.status === 'cancelado' }"
+            class="text-weight-bold"
+          >
             {{ item.cliente }}
-            <q-badge v-if="item.status === 'cancelado'" color="red" label="Cancelado" class="q-ml-sm" />
-            <q-badge v-if="item.status === 'concluido'" color="positive" label="Realizado" class="q-ml-sm" />
+            <q-badge
+              v-if="item.status === 'cancelado'"
+              color="red"
+              label="Cancelado"
+              class="q-ml-sm"
+            />
+            <q-badge
+              v-if="item.status === 'concluido'"
+              color="positive"
+              label="Realizado"
+              class="q-ml-sm"
+            />
           </q-item-label>
           <q-item-label caption class="text-grey-8">
             {{ Array.isArray(item.servicos) ? item.servicos.join(', ') : item.servico }}
@@ -89,12 +110,29 @@
         <q-item-section side>
           <div class="row items-center no-wrap">
             <div class="text-positive text-weight-bolder q-mr-md">R$ {{ item.valorTotal }}</div>
-            
+
             <template v-if="!item.status">
-              <q-btn flat round dense color="positive" icon="check_circle" size="sm" class="q-mr-xs" @click.stop="finalizarServico(item)">
+              <q-btn
+                flat
+                round
+                dense
+                color="positive"
+                icon="check_circle"
+                size="sm"
+                class="q-mr-xs"
+                @click.stop="finalizarServico(item)"
+              >
                 <q-tooltip>Concluir Serviço</q-tooltip>
               </q-btn>
-              <q-btn flat round dense color="red" icon="close" size="sm" @click.stop="cancelarAgendamento(item)">
+              <q-btn
+                flat
+                round
+                dense
+                color="red"
+                icon="close"
+                size="sm"
+                @click.stop="cancelarAgendamento(item)"
+              >
                 <q-tooltip>Cancelar</q-tooltip>
               </q-btn>
             </template>
@@ -119,28 +157,65 @@
           <div class="text-subtitle1 text-weight-bold">{{ agendamentoSelecionado?.cliente }}</div>
           <p class="text-grey-7">{{ agendamentoSelecionado?.whatsapp }}</p>
           <q-separator q-my-md />
-          
-          <div class="q-mt-sm"><strong>Horário:</strong> {{ agendamentoSelecionado?.hora }}</div>
-          <div class="q-mb-md"><strong>Serviços:</strong> {{ Array.isArray(agendamentoSelecionado?.servicos) ? agendamentoSelecionado?.servicos.join(', ') : agendamentoSelecionado?.servico }}</div>
 
-          <div v-if="!agendamentoSelecionado?.status" class="row items-center q-gutter-sm no-wrap bg-grey-1 q-pa-sm rounded-borders">
-            <div class="text-h6 text-primary">Total: R$ {{ agendamentoSelecionado?.valorTotal }}</div>
-            <q-space />
-            <q-input v-model.number="valorParaDescontar" label="Desc." type="number" outlined dense prefix="R$" style="width: 80px" />
-            <q-btn color="orange-9" icon="done" @click="confirmarDesconto" :disable="!valorParaDescontar" />
+          <div class="q-mt-sm"><strong>Horário:</strong> {{ agendamentoSelecionado?.hora }}</div>
+          <div class="q-mb-md">
+            <strong>Serviços:</strong>
+            {{
+              Array.isArray(agendamentoSelecionado?.servicos)
+                ? agendamentoSelecionado?.servicos.join(', ')
+                : agendamentoSelecionado?.servico
+            }}
           </div>
-          
-          <div v-else-if="agendamentoSelecionado?.status === 'concluido'" class="text-h5 text-positive text-center q-pa-md text-weight-bold">✓ SERVIÇO REALIZADO</div>
-          <div v-else class="text-h5 text-red text-center q-pa-md text-weight-bold">✕ CANCELADO</div>
+
+          <div
+            v-if="!agendamentoSelecionado?.status"
+            class="row items-center q-gutter-sm no-wrap bg-grey-1 q-pa-sm rounded-borders"
+          >
+            <div class="text-h6 text-primary">
+              Total: R$ {{ agendamentoSelecionado?.valorTotal }}
+            </div>
+            <q-space />
+            <q-input
+              v-model.number="valorParaDescontar"
+              label="Desc."
+              type="number"
+              outlined
+              dense
+              prefix="R$"
+              style="width: 80px"
+            />
+            <q-btn
+              color="orange-9"
+              icon="done"
+              @click="confirmarDesconto"
+              :disable="!valorParaDescontar"
+            />
+          </div>
+
+          <div
+            v-else-if="agendamentoSelecionado?.status === 'concluido'"
+            class="text-h5 text-positive text-center q-pa-md text-weight-bold"
+          >
+            ✓ SERVIÇO REALIZADO
+          </div>
+          <div v-else class="text-h5 text-red text-center q-pa-md text-weight-bold">
+            ✕ CANCELADO
+          </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pb-md q-px-md">
           <q-btn label="Fechar" color="grey-7" flat v-close-popup />
-          <q-btn v-if="agendamentoSelecionado?.status !== 'cancelado'" label="Whats" color="green" icon="chat" @click="enviarLembrete(agendamentoSelecionado)" />
+          <q-btn
+            v-if="agendamentoSelecionado?.status !== 'cancelado'"
+            label="Whats"
+            color="green"
+            icon="chat"
+            @click="enviarLembrete(agendamentoSelecionado)"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
-
   </q-page>
 </template>
 
@@ -163,14 +238,29 @@ const agendamentoSelecionado = ref(null)
 
 const vistaCalendario = ref({
   month: new Date().getMonth() + 1,
-  year: new Date().getFullYear()
+  year: new Date().getFullYear(),
 })
 
 // --- NAVEGAÇÃO CALENDÁRIO ---
-const aoNavegarNoCalendario = (view) => { vistaCalendario.value = view }
+const aoNavegarNoCalendario = (view) => {
+  vistaCalendario.value = view
+}
 
 const nomeMesVisualizado = computed(() => {
-  const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+  const meses = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+  ]
   return meses[vistaCalendario.value.month - 1]
 })
 
@@ -179,8 +269,8 @@ const nomeMesVisualizado = computed(() => {
 // Cria a lista de dias com agendamento no formato YYYY/MM/DD para o calendário pintar de amarelo
 const datasComAgendamento = computed(() => {
   const diasUnicos = new Set()
-  
-  todosAgendamentos.value.forEach(item => {
+
+  todosAgendamentos.value.forEach((item) => {
     // Só inclui dias de agendamentos que não estejam cancelados (opcional, pode tirar se quiser mostrar todos)
     if (item.data && item.status !== 'cancelado') {
       // Inverte de DD/MM/YYYY para YYYY/MM/DD
@@ -188,13 +278,13 @@ const datasComAgendamento = computed(() => {
       diasUnicos.add(`${ano}/${mes}/${dia}`)
     }
   })
-  
+
   return Array.from(diasUnicos)
 })
 
 const faturamentoDiarioFormatado = computed(() => {
   const total = agendamentosDia.value
-    .filter(i => i.status !== 'cancelado')
+    .filter((i) => i.status !== 'cancelado')
     .reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0)
   return total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 })
@@ -203,9 +293,9 @@ const faturamentoMensalFormatado = computed(() => {
   const mSel = vistaCalendario.value.month
   const aSel = vistaCalendario.value.year
   const total = todosAgendamentos.value
-    .filter(item => {
+    .filter((item) => {
       if (!item.data || item.status === 'cancelado') return false
-      const [ m, a] = item.data.replace(/-/g, '/').split('/')
+      const [m, a] = item.data.replace(/-/g, '/').split('/')
       return Number(m) === mSel && Number(a) === aSel
     })
     .reduce((acc, item) => acc + (Number(item.valorTotal) || 0), 0)
@@ -221,27 +311,35 @@ const salvarNoBanco = async (item) => {
   } catch {
     $q.notify({ type: 'negative', message: 'Erro ao salvar. Verifique o servidor.' })
     return false
-  } finally { $q.loading.hide() }
+  } finally {
+    $q.loading.hide()
+  }
 }
 
 const finalizarServico = (item) => {
-  $q.dialog({ title: 'Finalizar', message: `Concluir serviço de ${item.cliente}?`, cancel: true })
-    .onOk(async () => {
-      if (await salvarNoBanco({ ...item, status: 'concluido' })) {
-        item.status = 'concluido'
-        $q.notify({ type: 'positive', message: 'Concluído!', icon: 'check' })
-      }
-    })
+  $q.dialog({
+    title: 'Finalizar',
+    message: `Concluir serviço de ${item.cliente}?`,
+    cancel: true,
+  }).onOk(async () => {
+    if (await salvarNoBanco({ ...item, status: 'concluido' })) {
+      item.status = 'concluido'
+      $q.notify({ type: 'positive', message: 'Concluído!', icon: 'check' })
+    }
+  })
 }
 
 const cancelarAgendamento = (item) => {
-  $q.dialog({ title: 'Cancelar', message: `Cancelar agendamento de ${item.cliente}?`, cancel: true })
-    .onOk(async () => {
-      if (await salvarNoBanco({ ...item, status: 'cancelado' })) {
-        item.status = 'cancelado'
-        $q.notify({ type: 'warning', message: 'Cancelado.' })
-      }
-    })
+  $q.dialog({
+    title: 'Cancelar',
+    message: `Cancelar agendamento de ${item.cliente}?`,
+    cancel: true,
+  }).onOk(async () => {
+    if (await salvarNoBanco({ ...item, status: 'cancelado' })) {
+      item.status = 'cancelado'
+      $q.notify({ type: 'warning', message: 'Cancelado.' })
+    }
+  })
 }
 
 const confirmarDesconto = async () => {
@@ -257,7 +355,7 @@ const confirmarDesconto = async () => {
 // --- AUXILIARES ---
 const filtrarPorData = () => {
   const busca = dataSelecionada.value.replace(/-/g, '/')
-  agendamentosDia.value = todosAgendamentos.value.filter(item => {
+  agendamentosDia.value = todosAgendamentos.value.filter((item) => {
     return item.data && item.data.replace(/-/g, '/') === busca
   })
 }
@@ -267,31 +365,52 @@ const buscarDadosDoServidor = async () => {
     const res = await api.get('/agendamentos')
     todosAgendamentos.value = res.data
     filtrarPorData()
-  } catch (e) { console.error(e) }
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const dataFormatadaExibicao = computed(() => {
   const p = dataSelecionada.value.split('/')
-  return date.formatDate(new Date(p[2], p[1]-1, p[0]), 'D [de] MMMM', {
-    months: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+  return date.formatDate(new Date(p[2], p[1] - 1, p[0]), 'D [de] MMMM', {
+    months: [
+      'Janeiro',
+      'Fevereiro',
+      'Março',
+      'Abril',
+      'Maio',
+      'Junho',
+      'Julho',
+      'Agosto',
+      'Setembro',
+      'Outubro',
+      'Novembro',
+      'Dezembro',
+    ],
   })
 })
 
 const proximoDia = () => {
   const p = dataSelecionada.value.split('/')
-  const n = date.addToDate(new Date(p[2], p[1]-1, p[0]), { days: 1 })
+  const n = date.addToDate(new Date(p[2], p[1] - 1, p[0]), { days: 1 })
   dataSelecionada.value = date.formatDate(n, 'DD/MM/YYYY')
 }
 const voltarDia = () => {
   const p = dataSelecionada.value.split('/')
-  const n = date.subtractFromDate(new Date(p[2], p[1]-1, p[0]), { days: 1 })
+  const n = date.subtractFromDate(new Date(p[2], p[1] - 1, p[0]), { days: 1 })
   dataSelecionada.value = date.formatDate(n, 'DD/MM/YYYY')
 }
 
-const verDetalhes = (item) => { agendamentoSelecionado.value = item; exibirDetalhes.value = true; }
+const verDetalhes = (item) => {
+  agendamentoSelecionado.value = item
+  exibirDetalhes.value = true
+}
 const enviarLembrete = (item) => {
   const f = item.whatsapp ? item.whatsapp.replace(/\D/g, '') : ''
-  window.open(`https://wa.me/55${f}?text=Olá ${item.cliente}, confirmo seu horário hoje às ${item.hora}!`, '_blank')
+  window.open(
+    `https://wa.me/55${f}?text=Olá ${item.cliente}, confirmo seu horário hoje às ${item.hora}!`,
+    '_blank',
+  )
 }
 const irParaNovaReserva = () => router.push('/agendamento')
 
@@ -308,10 +427,31 @@ watch(dataSelecionada, filtrarPorData)
   display: flex;
   align-items: center;
 }
-.card-diario { background: linear-gradient(135deg, #134e5e 0%, #71b280 100%); }
-.card-mensal { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
-.icon-fundo { position: absolute; right: -10px; bottom: -10px; opacity: 0.15; transform: rotate(-15deg); }
-.bg-concluido { background-color: #f0f9f1 !important; border-left: 6px solid #21ba45; }
-.bg-cancelado { background-color: #fff0f0 !important; border-left: 6px solid #f44336; }
-.text-strike { text-decoration: line-through; opacity: 0.5; }
+.card-diario {
+  background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+}
+.card-mensal {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+.icon-fundo {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  opacity: 0.15;
+  transform: rotate(-15deg);
+}
+.bg-concluido {
+  background-color: #f0f9f1 !important;
+  border-left: 6px solid #21ba45;
+}
+.bg-cancelado {
+  background-color: #fff0f0 !important;
+  border-left: 6px solid #f44336;
+}
+.text-strike {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
 </style>
+
+//atualização 08/05/2026
